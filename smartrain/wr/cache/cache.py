@@ -7,8 +7,8 @@ from typing import Any, Callable
 import pandas as pd
 
 from smartrain import context as ctx
-from smartrain.cio.reader import FileReader, JSONReader
-from smartrain.cio.writer import FileWriter, JSONWriter
+from smartrain.wr.reader import FileReader, JSONReader
+from smartrain.wr.writer import FileWriter, JSONWriter
 
 
 class SqlCache:

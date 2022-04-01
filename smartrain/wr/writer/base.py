@@ -2,7 +2,7 @@ import os
 import time
 
 import smartrain.context as ctx
-from smartrain.config import BasicConfig
+from smartrain.constructor import BasicConfig
 
 
 class Writer:

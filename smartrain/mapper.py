@@ -1,4 +1,4 @@
-from smartrain import TypicalSampleBuilder, TypicalTaskType, CheckInSampleBuilder, Processor, DictReader
+from smartrain.builder import TypicalSampleBuilder, TypicalTaskType, CheckInSampleBuilder, Processor
 
 
 class Mapper:

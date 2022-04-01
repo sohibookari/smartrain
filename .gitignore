@@ -2,5 +2,7 @@
 /smartrain/output/
 /smartrain/log/
 /smartrain/cache/
-/default.yaml
 /.idea/
+/config.yaml
+/resource.yml
+/sample_task.yaml

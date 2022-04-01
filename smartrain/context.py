@@ -12,6 +12,10 @@ def get(name):
         raise ContextUndefinedError
 
 
+def lists():
+    return __context_dict.keys()
+
+
 class ContextUndefinedError(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)

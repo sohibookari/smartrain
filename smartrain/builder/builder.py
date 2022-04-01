@@ -3,7 +3,7 @@ import pandas as pd
 
 from smartrain.builder.processor import TimeProcessor, Processor
 from smartrain.builder.remover import Remover
-from smartrain.cio.writer.file import PltWriter
+from smartrain.wr.writer.file import PltWriter
 
 
 class Builder:

@@ -1,0 +1,6 @@
+/venv/
+/smartrain/output/
+/smartrain/log/
+/smartrain/cache/
+/default.yaml
+/.idea/

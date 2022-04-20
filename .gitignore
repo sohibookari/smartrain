@@ -4,5 +4,5 @@
 /smartrain/cache/
 /.idea/
 /config.yaml
-/resource.yml
-/sample_task.yaml
+/resources.yml
+/task.yaml

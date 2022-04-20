@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 import threading
 import uuid
@@ -17,7 +18,7 @@ class SqlCache:
 
     def __init__(self, path: str = None, file: str = None):
         config = ctx.get('config')
-        self._logger = config.getLogger()
+        self._logger = ctx.get('logger')
         self._rw_lock = threading.Lock()  # r/w lock
         self._lock = threading.Lock()  # detector lock
         self._path: str = path if path else config.CACHE_DIR
@@ -102,10 +103,8 @@ class SqlCache:
             cache_name = self._gen_id()
             cache = generator(self._path, cache_name)
             self.update(absolute_name, status, cache_name)
-            self._logger.info("Successfully create the cache of %s."
-                              % (alias if alias else '{No alias}'))
         else:
-            self._logger.info("Successfully fetch the cache of %s."
-                              % (alias if alias else '{No alias}'))
+            self._logger.debug("Successfully fetch the cache of %s."
+                               % (alias if alias else '{No alias}'))
 
         return cache

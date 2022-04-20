@@ -27,11 +27,16 @@ class Processor:
         self.data[target] = scalar.fit_transform(series_to_ndarray(self.data[target]))
         return self
 
-    def cluster(self, target, k) :
-        cluster = sklearn.cluster.KMeans(n_clusters=k, init='k-means++', n_init=10, max_iter=300, tol=0.0001,
-                                         verbose=0, random_state=None,
-                                         copy_x=True, algorithm='auto')
-        self.data[target] = cluster.fit(np.array(self.data[target]).reshape(-1, 1))
+    def normalize_by_zscore(self, target):
+        from sklearn.preprocessing import StandardScaler
+        scaler = StandardScaler()
+        self.data[target] = scaler.fit_transform(series_to_ndarray(self.data[target]))
+        return self
+
+    def cluster(self, target, k):
+        from sklearn.cluster import KMeans
+        cluster = KMeans(n_clusters=k, random_state=0)
+        self.data['cluster'] = cluster.fit_predict(series_to_ndarray(self.data[target]))
         return self
 
     def get_data(self) -> pd.DataFrame:

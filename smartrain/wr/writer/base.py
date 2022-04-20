@@ -2,13 +2,12 @@ import os
 import time
 
 import smartrain.context as ctx
-from smartrain.constructor import BasicConfig
 
 
 class Writer:
     def __init__(self, file, path=None):
-        self.config: BasicConfig = ctx.get('config')
-        self.logger = self.config.getLogger()
+        self.config = ctx.get('config')
+        self.logger = ctx.get('logger')
         self.file = file
         self.path = path
 

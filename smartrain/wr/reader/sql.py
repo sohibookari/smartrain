@@ -1,8 +1,7 @@
 import threading
-from typing import Any
+from typing import Any, Dict, List, Tuple
 
 import pandas as pd
-import sqlalchemy.engine
 
 from sqlalchemy import create_engine
 from .base import Reader
@@ -56,14 +55,14 @@ class SqlReader(Reader):
 
 
 class DictReader(SqlReader):
-    def __init__(self, view_name, conn=None):
+    def __init__(self, query_dict, conn=None):
         super().__init__(conn)
-        self._query_dict = self.config.VIEWS[view_name]
+        self._query_dict = query_dict
 
     def read_view(self, view):
         return self.read(self._query_dict[view], alias=view)
 
-    def read_threading(self) -> list:
+    def read_threading(self) -> List[Tuple[Any, Any]]:
         result = []
         keys = self._query_dict.keys()
         results = self.reads(query=self._query_dict.values(), keys=list(keys))

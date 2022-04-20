@@ -6,8 +6,8 @@ from logging import Logger
 from typing import Any
 
 import yaml
-
 import smartrain.context as ctx
+from smartrain.wr import DictReader
 
 
 class TaskConfig(yaml.YAMLObject):
@@ -19,21 +19,63 @@ class TaskConfig(yaml.YAMLObject):
 
 
 class SmrTask(yaml.YAMLObject):
-    def __init__(self, name, type, loads, set=True) -> None:
-        self.logger: Logger = ctx.get('config').getLogger()
+    def __init__(self, name, type, loads, source=None, domain=None, split=True) -> None:
+        self.logger: Logger = ctx.get('logger')
         self.name = name
+        self.domain = domain
         self.type = type
+        self.split = split
+        self.source = source
         self.loads = loads
-        self.set = set
 
-    def _run_single(self, load) -> Any:
-        return getattr(ctx.get('mapper'), '_do_%s' % self.type)(load)
+    def _run_single(self, data, params=None):
+        if params is None:
+            params = []
+        return getattr(ctx.get('mapper'), '_do_%s' % self.type)(data, *params)
+
+    def _run_split(self, t_load, t_source) -> Any:
+        load = ctx.fetch(t_load, t_source)
+        return self._run_single(load, [t_load])
 
     def run(self) -> None:
-        result_dict = {}
-        for load in self.loads:
-            result_dict[load] = self._run_single(load)
-        ctx.set(self.name, result_dict)
+        self.logger.info('Task %s is executing.' % self.name)
+        start_t = time.time()
+        if self.split:
+            for index, load in enumerate(self.loads):
+                # load is an id of the real resource.
+                t_load, t_source = ctx.parse(load, self.source if self.source else self.domain)
+                self.logger.info('Load %s is on process. (%d/%d)' % (t_load, index+1, len(self.loads)))
+                res = self._run_split(t_load, t_source)
+                if res is not None:
+                    ctx.set(t_load, self.domain if self.domain else self.name, res)
+        else:
+            data_set = []
+            for load in self.loads:
+                t_load, t_source = ctx.parse(load, self.source)
+                data_set.append((t_load, ctx.fetch(t_load, t_source)))
+            res = self._run_single(data_set)
+            if res is not None:
+                ctx.set(self.name, self.domain if self.domain else self.name, res)
+        end_t = time.time()
+        self.logger.debug(ctx.list())
+        self.logger.info('Task %s ended in %.4f' % (self.name, end_t-start_t))
+
+    def __repr__(self) -> str:
+        return super().__repr__() + '\n' + str(self.__dict__)
+
+
+class ResourcesConfig:
+    def __init__(self, resources):
+        self.resources = resources
+
+    def fetch_all(self):
+        for res in self.resources.items():
+            data = DictReader(res[1]).read_threading()
+            for d in data:
+                ctx.set(d[0], res[0], d[1])
+
+    def fetch(self, res, target):
+        return DictReader(self.resources[res]).read_view(target)
 
     def __repr__(self) -> str:
         return super().__repr__() + '\n' + str(self.__dict__)
@@ -42,8 +84,6 @@ class SmrTask(yaml.YAMLObject):
 class BasicConfig:
     def __init__(self, db_url, output_dir, cache_dir, log_dir, cache_file,
                  log_to_file, log_to_console, log_level, log_formatter):
-
-        self._logger = None
 
         self.PROJECT_DIR = os.path.dirname(os.path.abspath(os.path.join(__file__, "")))
         self.OUTPUT_DIR = output_dir.replace('$PWD', self.PROJECT_DIR)
@@ -65,25 +105,24 @@ class BasicConfig:
     def __repr__(self) -> str:
         return super().__repr__() + '\n' + str(self.__dict__)
 
-    def getLogger(self) -> logging.Logger:
-        return self._logger
-
     def _generate_logger(self):
-        self._logger = logging.getLogger(__name__)
-        self._logger.setLevel(self.LOG_LEVEL)
+        logger = logging.getLogger(__name__)
+        logger.setLevel(self.LOG_LEVEL)
 
         formatter = logging.Formatter(self.LOG_FORMATTER)
         if self.LOG_TO_FILE:
             file_handler = logging.FileHandler(self.LOG_PATH)
             file_handler.setLevel(self.LOG_LEVEL)
             file_handler.setFormatter(formatter)
-            self._logger.addHandler(file_handler)
+            logger.addHandler(file_handler)
 
         if self.LOG_TO_CONSOLE:
             console_handler = logging.StreamHandler(stream=sys.stdout)
             console_handler.setLevel(self.LOG_LEVEL)
             console_handler.setFormatter(formatter)
-            self._logger.addHandler(console_handler)
+            logger.addHandler(console_handler)
+
+        ctx.set('logger', 'config', logger)
 
     def _create_workdir(self):
         try:
@@ -106,6 +145,11 @@ def basic_config_constructor(loader, node):
 def task_config_constructor(loader, node):
     fields = loader.construct_mapping(node)
     return TaskConfig(**fields)
+
+
+def resource_config_constructor(loader, node):
+    fields = loader.construct_mapping(node)
+    return ResourcesConfig(**fields)
 
 
 def task_constructor(loader, node):

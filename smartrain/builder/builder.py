@@ -41,7 +41,8 @@ class FrequencySampleBuilder(Builder):
         df = self.get_resource()
         processor = Processor(df)
         processor.count_by_group('id', 'classroom_id')
-        res = processor.normalize_by_zscore('id').get_data()
+        # processor.normalize_by_zscore('id')
+        res = processor.get_data()
         res.rename(columns={'id': 'value'}, inplace=True)
 
         self.result = res

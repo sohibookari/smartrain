@@ -3,6 +3,5 @@
 /smartrain/log/
 /smartrain/cache/
 /.idea/
-/config.yaml
-/resources.yml
-/task.yaml
+*.yaml
+*.yml

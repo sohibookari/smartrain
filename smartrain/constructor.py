@@ -28,14 +28,12 @@ class SmrTask(yaml.YAMLObject):
         self.source = source
         self.loads = loads
 
-    def _run_single(self, data, params=None):
-        if params is None:
-            params = []
-        return getattr(ctx.get('mapper'), '_do_%s' % self.type)(data, *params)
+    def _run_single(self, data, name=None):
+        return getattr(ctx.get('mapper'), '_do_%s' % self.type)(data, name)
 
     def _run_split(self, t_load, t_source) -> Any:
         load = ctx.fetch(t_load, t_source)
-        return self._run_single(load, [t_load])
+        return self._run_single(load, t_load)
 
     def run(self) -> None:
         self.logger.info('Task %s is executing.' % self.name)

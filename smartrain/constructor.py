@@ -19,7 +19,7 @@ class TaskConfig(yaml.YAMLObject):
 
 
 class SmrTask(yaml.YAMLObject):
-    def __init__(self, name, type, loads, source=None, domain=None, split=True) -> None:
+    def __init__(self, name, type, loads=None, source=None, domain=None, split=True, params=None, skip=False) -> None:
         self.logger: Logger = ctx.get('logger')
         self.name = name
         self.domain = domain
@@ -27,6 +27,8 @@ class SmrTask(yaml.YAMLObject):
         self.split = split
         self.source = source
         self.loads = loads
+        self.params = params
+        self.skip = skip
 
     def _run_single(self, data, name=None):
         return getattr(ctx.get('mapper'), '_do_%s' % self.type)(data, name)
@@ -38,7 +40,11 @@ class SmrTask(yaml.YAMLObject):
     def run(self) -> None:
         self.logger.info('Task %s is executing.' % self.name)
         start_t = time.time()
-        if self.split:
+        if self.params:
+            res = getattr(ctx.get('mapper'), '_do_%s' % self.type)(self.name, self.params)
+            if res is not None:
+                ctx.set(self.name, self.domain if self.domain else self.name, res)
+        elif self.split:
             for index, load in enumerate(self.loads):
                 # load is an id of the real resource.
                 t_load, t_source = ctx.parse(load, self.source if self.source else self.domain)
@@ -55,7 +61,7 @@ class SmrTask(yaml.YAMLObject):
             if res is not None:
                 ctx.set(self.name, self.domain if self.domain else self.name, res)
         end_t = time.time()
-        self.logger.debug(ctx.list())
+        self.logger.debug(ctx.get_keys())
         self.logger.info('Task %s ended in %.4f' % (self.name, end_t-start_t))
 
     def __repr__(self) -> str:

@@ -31,7 +31,7 @@ def load_resources():
 
 
 def list_context():
-    ctx.get('logger').info('loaded context object: ' + [i for i in ctx.list()].__str__())
+    ctx.get('logger').info('loaded context object: ' + [i for i in ctx.get_keys()].__str__())
     ctx.get('logger').info('smart-rain has been successful loaded.')
 
 

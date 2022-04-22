@@ -1,15 +1,19 @@
 from logging import Logger
 
-import numpy as np
+import pandas as pd
+
 import smartrain.context as ctx
 from smartrain.builder import (TypicalSampleBuilder, TypicalTaskType, CheckInSampleBuilder, SampleSetMerger,
                                FrequencySampleBuilder, Processor, Remover)
+from smartrain.constructor import BasicConfig
 from smartrain.wr import FileWriter
+from smartrain.trainer import Trainer
 
 
 class Mapper:
     def __init__(self):
         self.logger: Logger = ctx.get('logger')
+        self.config: BasicConfig = ctx.get('config')
 
     def _do_SUMMATION_TASK(self, data, name=None):
         builder = TypicalSampleBuilder(data, task=TypicalTaskType.SUMMATION_TASK)
@@ -57,3 +61,10 @@ class Mapper:
 
     def _do_OUTPUT_TASK(self, data, name):
         FileWriter('%s.csv' % name).csv(data)
+
+    def _do_TRAIN_TASK(self, name, kwargs):
+        data_path = kwargs.get('data_path')
+        fill_method = kwargs.get('fill_method')
+        data = pd.read_csv(data_path, index_col=0)
+        trainer = Trainer(data, kwargs)
+        res = trainer.prepare().rtm_fill().resample().train()

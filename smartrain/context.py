@@ -33,8 +33,8 @@ def parse(str, source=None):
     return t_load, t_source
 
 
-def list():
-    return __context_dict.keys()
+def get_keys():
+    return list(__context_dict.keys())
 
 
 class ContextUndefinedError(Exception):

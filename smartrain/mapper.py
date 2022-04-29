@@ -68,3 +68,4 @@ class Mapper:
         data = pd.read_csv(data_path, index_col=0)
         trainer = Trainer(data, kwargs)
         res = trainer.prepare().rtm_fill().resample().train()
+        return res

@@ -1,6 +1,7 @@
 from logging import Logger
 
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression, LogisticRegression
@@ -121,6 +122,11 @@ class Trainer:
         rfc = RandomForestClassifier(n_estimators=191, max_depth=26, random_state=1, min_samples_leaf=1)
         rfc = self._train(rfc)
         self._score(rfc)
+        res = rfc.predict(self.x_test)
+        df = pd.DataFrame(self.x_test)
+        df['predict'] = res
+        df['label'] = self.y_test
+        return df
 
     def _train(self, model):
         model.fit(self.x_train, self.y_train)
